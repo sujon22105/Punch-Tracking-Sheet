@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tablet Punch Tooling & Inspection Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 100%;
+            overflow-x: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+        form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+            background: #eef2f3;
+            padding: 15px;
+            border-radius: 6px;
+        }
+        form label {
+            display: flex;
+            flex-direction: column;
+            font-size: 14px;
+            font-weight: bold;
+            color: #444;
+        }
+        form input {
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        form button {
+            grid-column: span full;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        form button:hover {
+            background-color: #218838;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 13px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .alert-red {
+            background-color: #f8d7da;
+            color: #721c24;
+            font-weight: bold;
+        }
+        .alert-green {
+            background-color: #d4edda;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Tablet Punch Tooling & Inspection Tracker</h2>
+
+    <!-- Data Entry Form -->
+    <form id="punchForm">
+        <label>Punch ID:
+            <input type="text" id="punchId" required>
+        </label>
+        <label>First Receiving Date:
+            <input type="date" id="receivingDate" required>
+        </label>
+        <label>Upper Punch Count (This Set):
+            <input type="number" id="upperCountSet" required>
+        </label>
+        <label>Lower Punch Count (This Set):
+            <input type="number" id="lowerCountSet" required>
+        </label>
+        <label>Upper Punch Produced (Million):
+            <input type="number" step="0.01" id="upperProduced" required>
+        </label>
+        <label>Lower Punch Produced (Million):
+            <input type="number" step="0.01" id="lowerProduced" required>
+        </label>
+        <label>Last Inspection Date:
+            <input type="date" id="lastInspectionDate" required>
+        </label>
+        <button type="submit">Add / Save Record</button>
+    </form>
+
+    <!-- Data Display Table -->
+    <table>
+        <thead>
+            <tr>
+                <th>Punch ID</th>
+                <th>First Receiving Date</th>
+                <th>No. of Punches (Upper/Lower)</th>
+                <th>Grand Total Produced (Million)</th>
+                <th>Produced Under Life Time (Million)</th>
+                <th>Last Inspection Date</th>
+                <th>Inspection Due Status (1.5M / 1 Year)</th>
+                <th>Notification</th>
+            </tr>
+        <span style="display:none"></span></thead>
+        <tbody id="tableBody">
+            <!-- Dynamic Rows will go here -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    const form = document.getElementById('punchForm');
+    const tableBody = document.getElementById('tableBody');
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const punchId = document.getElementById('punchId').value;
+        const receivingDate = document.getElementById('receivingDate').value;
+        const upperCountSet = document.getElementById('upperCountSet').value;
+        const lowerCountSet = document.getElementById('lowerCountSet').value;
+        const upperProduced = parseFloat(document.getElementById('upperProduced').value);
+        const lowerProduced = parseFloat(document.getElementById('lowerProduced').value);
+        const lastInspectionDate = document.getElementById('lastInspectionDate').value;
+
+        // Calculations (1.5 Million limit or 1 Year check)
+        const totalProduced = upperProduced + lowerProduced;
+        
+        // Date calculation for 1 year (365 days)
+        const lastInsp = new Date(lastInspectionDate);
+        const today = new Date();
+        const diffTime = Math.abs(today - lastInsp);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        let notification = "Safe";
+        let statusClass = "alert-green";
+
+        if (totalProduced >= 1.5 || diffDays >= 335) { // 335 days means 30 days before 1 year (365 days)
+            notification = "Inspection Due / Limit Reached!";
+            statusClass = "alert-red";
+        }
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${punchId}</td>
+            <td>${receivingDate}</td>
+            <td>U: ${upperCountSet} <br> L: ${lowerCountSet}</td>
+            <td>${totalProduced.toFixed(2)}M</td>
+            <td>U: ${upperProduced}M <br> L: ${lowerProduced}M</td>
+            <td>${lastInspectionDate}</td>
+            <td>Days Passed: ${diffDays} days</td>
+            <td class="${statusClass}">${notification}</td>
+        `;
+
+        tableBody.appendChild(row);
+        form.reset();
+    });
+</script>
+
+</body>
+</html>
